@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { repoActivity } from '../api/github.js';
 import './githubActivity.css';
+import { Loading } from './loaders.jsx';
 
 // Drop-in replacement for src/ui/GithubActivity.jsx. Same default export and the same `repo` prop that App.jsx already passes.
 
@@ -63,7 +64,7 @@ export default function GithubActivity({ repo }) {
     return (
       <section className="gha" aria-busy="true">
         <h3 className="gha__title">Built in the open</h3>
-        <p className="gha__note">Loading…</p>
+        <Loading label="Loading activity" className="gha__note" />
       </section>
     );
   }

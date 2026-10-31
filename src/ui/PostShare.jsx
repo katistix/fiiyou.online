@@ -3,6 +3,7 @@ import { X, DownloadSimple, ShareNetwork, PaperPlaneRight, Check, ImageSquare, C
 import { friends, social } from '../index.js';
 import { Avatar, useImages } from './shared.jsx';
 import './PostShare.css';
+import { Loading, RowsSkeleton } from './loaders.jsx';
 
 // ---------------------------------------------------------------------------------------------
 // The only two calls this file makes to your backend (adjust the names here if yours differ):
@@ -213,7 +214,7 @@ export default function PostShareModal({ p, img, onClose, notify }) {
       <button role="tab" aria-selected={tab === 'image'} className={tab === 'image' ? 'on' : ''} onClick={() => setTab('image')}><ImageSquare size={16} weight="bold" aria-hidden="true" />Story image</button></div>
 
     {tab === 'image' && <>
-      <div className="psprev">{err ? <p className="err" role="alert">{err}</p> : url ? <img src={url} alt="Preview of the story image" /> : <div className="boot">Making the image…</div>}</div>
+      <div className="psprev">{err ? <p className="err" role="alert">{err}</p> : url ? <img src={url} alt="Preview of the story image" /> : <div className="boot"><Loading label="Making the image" size={22} /></div>}</div>
       <div className="acts pswrap">
         {canShareFile && <button className="primary" onClick={share}><ShareNetwork size={16} weight="bold" aria-hidden="true" />Share…</button>}
         <button className={canShareFile ? 'ghost' : 'primary'} disabled={!url} onClick={download}><DownloadSimple size={16} weight="bold" aria-hidden="true" />Download</button></div>
@@ -224,7 +225,7 @@ export default function PostShareModal({ p, img, onClose, notify }) {
       <input value={note} maxLength={200} placeholder="Add a message (optional)" onChange={(e) => setNote(e.target.value)} aria-label="Message" />
       <input value={q} placeholder="Search friends…" onChange={(e) => setQ(e.target.value)} aria-label="Search friends" />
       <div className="pslist">
-        {!list ? <p className="empty">Loading…</p> : !shown.length ? <p className="empty">{list.length ? 'No match.' : 'Add some friends to send posts to.'}</p>
+        {!list ? <RowsSkeleton n={3} label="Loading friends" /> : !shown.length ? <p className="empty">{list.length ? 'No match.' : 'Add some friends to send posts to.'}</p>
           : shown.map((f) => (<div className="row" key={f.id}><Avatar src={av[f.avatar_path]} size={40} />
             <span className="link"><b>{f.display_name || f.username}</b><small>@{f.username}</small></span>
             <button className={sent[f.id] ? 'ghost sm' : 'primary sm'} disabled={busy === f.id || sent[f.id]} onClick={() => send(f)}>

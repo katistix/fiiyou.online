@@ -56,8 +56,7 @@ export async function sendTestPush() {
   if (error) {
     let msg = error.message;
     try { const j = await error.context?.json?.(); if (j?.error) msg = j.error; } catch { /* keep the generic message */ }
-    if (error.name === 'FunctionsFetchError') msg = 'Could not reach the send-push function. It is most likely not deployed (supabase functions deploy send-push --no-verify-jwt), or the browser blocked the request.';
-    else if (/not found|404/i.test(msg)) msg = 'The send-push function is not deployed on the server.';
+    if (/not found|404/i.test(msg)) msg = 'The send-push function is not deployed on the server.';
     throw new Error(msg);
   }
   return data;

@@ -1,0 +1,55 @@
+/* ======================================================================
+   loaders.css: loading tiles, shimmer placeholders and the squares spinner.
+   Uses the same tokens as the rest of the app (--g1..--g4, --accent-fg,
+   --rad-*), so it follows each person's theme. Load it after design.css.
+   Reduced motion: styles.css already turns animations off, so everything
+   below stays readable as a still frame.
+   ====================================================================== */
+
+.ld-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* A tile appears after a short beat, so fast loads never flash a skeleton. */
+.ld { animation: ld-in .3s ease .14s backwards; }
+@keyframes ld-in { from { opacity: 0; transform: translateY(4px); } }
+
+.ld-tile { background: var(--g1); border: 2px solid var(--g3); border-radius: var(--rad-xl, 18px); padding: 16px; display: grid; gap: 12px; overflow: hidden; min-width: 0; }
+/* position lives on the inner wrapper so the tile keeps the layout rules of whatever it stands in for (.snap is sticky on desktop, static on phones) */
+.ld-inner { position: relative; min-width: 0; }
+.ld-body { display: grid; gap: 12px; min-width: 0; }
+.ld-corner { position: absolute; top: 0; right: 0; }
+.ld-row { display: flex; align-items: center; gap: 12px; }
+.ld-col { display: grid; gap: 8px; flex: 1; min-width: 0; }
+.ld-stack { display: grid; gap: 14px; }
+.ld-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+/* shimmer */
+.bone { display: block; flex: none; max-width: 100%; background: linear-gradient(100deg, var(--g2) 30%, color-mix(in srgb, var(--g2) 70%, var(--g4)) 50%, var(--g2) 70%); background-size: 250% 100%; animation: ld-shimmer 1.5s linear infinite; }
+@keyframes ld-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* squares: a diagonal wave, 3x3 */
+.ld-sq { --sz: 28px; display: inline-grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--sz) * .09); width: var(--sz); height: var(--sz); flex: none; }
+.ld-sq i { display: block; background: var(--accent-fg, #fff); border-radius: 22%; opacity: .5; animation: ld-wave 1.1s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes ld-wave { 0%, 100% { transform: scale(.45); opacity: .25; border-radius: 40%; } 45% { transform: scale(1); opacity: 1; border-radius: 16%; } }
+
+.ld-inline { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 650; font-size: .9em; }
+
+/* shapes that must match the real layout */
+.ld-post { border-radius: var(--rad-xl, 18px); }
+.ld-rows .ld-body { gap: 14px; }
+.ld-head .ld-body { gap: 10px; }
+.ld-composer .ld-body { gap: 10px; }
+
+.ld-chat { display: grid; gap: 10px; padding: 4px 2px; }
+.ld-bub { max-width: 80%; } .ld-bub.l { justify-self: start; } .ld-bub.r { justify-self: end; }
+
+.ld-profile { max-width: 1060px; margin: 16px auto 40px; padding: 0 14px; display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 14px; align-items: start; }
+.ld-side .ld-body { justify-items: stretch; } .ld-avatar { justify-self: center; }
+.ld-cards { display: grid; gap: 14px; min-width: 0; }
+
+/* the app-shell boot reuses the real .nav; only its placeholders need sizing */
+.app > .nav .navlinks { align-items: center; }
+
+@media (max-width: 860px) {
+  .ld-profile { grid-template-columns: 1fr; }
+  .ld-avatar { width: 110px !important; height: 110px !important; }
+}

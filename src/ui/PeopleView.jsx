@@ -4,6 +4,7 @@ import { useImages, Avatar } from './shared.jsx';
 import { ask } from './dialog.jsx';
 import { friendlyError } from './errors.jsx';
 import SearchView from './SearchView.jsx';
+import { RowsSkeleton } from './loaders.jsx';
 
 /** People: your Friends and the Requests waiting for you. Finding new people lives in Search (discover + search are one thing). */
 export function PeopleView({ me, go, notify, onInvite }) {
@@ -20,7 +21,7 @@ export function PeopleView({ me, go, notify, onInvite }) {
     {[['discover', 'Discover'], ['friends', 'Friends'], ['requests', 'Requests']].map(([k, l]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l} {k === 'friends' && fl && <span className="count">{fl.length}</span>}{k === 'requests' && inc.length > 0 && <span className="count hot">{inc.length}</span>}</button>)}
     {onInvite && <button className="ghost sm" onClick={onInvite} style={{ marginLeft: 'auto' }}>Invite friends</button>}</div>
     {tab === 'discover' && <SearchView embedded me={me} go={go} notify={notify} onInvite={onInvite} />}
-    {tab === 'friends' && (fl === null ? <p className="empty" role="status">Loading…</p> : fl.length ? fl.map((f) => row(f, <span className="acts"><button className="primary sm" onClick={() => go('messages', null, f.id)}>Message</button><button className="ghost sm" onClick={async () => (await ask({ title: 'Remove this friend?', message: `${f.display_name} will be removed from your friends.`, confirmLabel: 'Remove', danger: true })) && act(() => friends.removeFriend(f.id), 'Removed')}>Remove</button></span>))
+    {tab === 'friends' && (fl === null ? <RowsSkeleton n={4} label="Loading friends" /> : fl.length ? fl.map((f) => row(f, <span className="acts"><button className="primary sm" onClick={() => go('messages', null, f.id)}>Message</button><button className="ghost sm" onClick={async () => (await ask({ title: 'Remove this friend?', message: `${f.display_name} will be removed from your friends.`, confirmLabel: 'Remove', danger: true })) && act(() => friends.removeFriend(f.id), 'Removed')}>Remove</button></span>))
       : <div className="empty"><p>No friends yet.</p><button className="primary" onClick={() => setTab('discover')}>Find people</button></div>)}
     {tab === 'requests' && (inc.length ? inc.map((r) => row(r.from, <span className="acts"><button className="primary sm" onClick={() => act(() => friends.acceptRequest(r.id), 'Friend added')}>Accept</button><button className="ghost sm" onClick={() => act(() => friends.declineRequest(r.id), 'Declined')}>Decline</button></span>)) : <p className="empty">No pending requests.</p>)}
   </div>);

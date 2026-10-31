@@ -8,7 +8,7 @@ import { SharedPostCard, decodeSharedPost, previewText } from './PostShare.jsx';
 import { MessageMenu, MessageEditor } from './MessageMenu.jsx';
 import { ask } from './dialog.jsx';
 import { ErrorState, friendlyError } from './errors.jsx';
-import InstallHint from './InstallHint.jsx';
+import { PostSkeleton, SnapshotSkeleton, ChatSkeleton } from './loaders.jsx';
 import { ArrowBendUpLeft, MagnifyingGlass, PaperPlaneRight, PushPin, X } from '@phosphor-icons/react';
 import './more.css';
 
@@ -25,7 +25,7 @@ const useFeed = (args, notify) => {
   const change = (np) => setRows((r) => r.map((x) => (x.id === np.id ? np : x))); const drop = (id) => setRows((r) => r.filter((x) => x.id !== id));
   return { rows, more, load, img, change, drop, err };
 };
-const List = ({ f, me, go, notify, empty }) => !f.rows ? <div className="boot">Loading…</div> : f.err && !f.rows.length ? <ErrorState error={f.err} onRetry={() => f.load(false)} title="Could not load posts" /> : (<>
+const List = ({ f, me, go, notify, empty }) => !f.rows ? <PostSkeleton n={3} /> : f.err && !f.rows.length ? <ErrorState error={f.err} onRetry={() => f.load(false)} title="Could not load posts" /> : (<>
   {!f.rows.length && <p className="empty">{empty}</p>}
   {f.rows.map((p) => <PostCard key={p.id} p={p} me={me} img={f.img} go={go} onChange={f.change} onDelete={f.drop} notify={notify} />)}
   {f.more && <button className="ghost wide" onClick={() => f.load(true, f.rows)}>Load more</button>}</>);
@@ -38,7 +38,7 @@ export function PostView({ id, me, go, notify }) {
   useEffect(() => { fetchPost(); }, [fetchPost]);
   const img = useImages(p ? [p.image_path, p.author_avatar_path] : []);
   if (err) return <ErrorState error={err} onRetry={fetchPost} title="Could not load this post" />;
-  if (p === undefined) return <div className="boot">Loading…</div>;
+  if (p === undefined) return <div className="plain view"><PostSkeleton n={1} label="Loading post" /></div>;
   return (<div className="plain view"><div className="phead"><button className="ghost sm" onClick={() => (history.length > 1 ? history.back() : go('home'))}>‹ Back</button></div>
     {p ? <PostCard p={p} me={me} img={img} go={go} onChange={setP} onDelete={() => go('home')} notify={notify} />
       : <p className="empty">This post is not available. It may have been deleted, or it is only visible to friends.</p>}</div>);
@@ -50,7 +50,7 @@ function Snapshot({ go, unread }) {
   useEffect(() => { profiles.getMyProfile().then((p) => { setMe(p); profiles.myViews(p.id).then(setViews).catch(() => {}); }).catch(() => {});
     friends.incomingRequests().then((r) => setReq(r.length)).catch(() => {}); discover.discover({ mode: 'new', limit: 3 }).then(setFresh).catch(() => {}); }, []);
   const img = useImages([me?.avatar_path, ...fresh.map((p) => p.avatar_path)]);
-  if (!me) return <aside className="snap panel"><div className="boot">…</div></aside>;
+  if (!me) return <SnapshotSkeleton />;
   return (<aside className="snap panel"><button type="button" className="snaptop who" onClick={() => go('profile')} aria-label="Open my profile"><Avatar src={img[me.avatar_path]} size={64} /><span><b>{me.display_name}</b><small>{me.headline || 'No mood set yet'}</small></span></button>
     <div className="stats3"><button onClick={() => go('messages')}><b>{unread}</b><small>messages</small></button><button onClick={() => go('people')}><b>{req}</b><small>requests</small></button><span><b>{views ?? '–'}</b><small>views</small></span></div>
     <button className="primary wide" onClick={() => go('profile', null, null, true)}>Edit my profile</button>
@@ -63,7 +63,7 @@ export function HomeView({ me, go, notify, unread }) {
   useEffect(() => { discover.listLocalities().then(setLocs); social.listPlaces().then(setPlaces).catch(() => {}); }, []);
   const f = useFeed(tab === 'events' ? { kind: 'event', upcoming: true, localityId: loc ? +loc : null } : { onlyFriends: tab === 'friends', localityId: loc ? +loc : null }, notify);
   return (<div className="plain wide view"><div className="homegrid"><Snapshot go={go} unread={unread} />
-    <div className="homemain"><InstallHint /><Composer me={me} places={places} onPosted={() => f.load(false)} notify={notify} />
+    <div className="homemain"><Composer me={me} places={places} onPosted={() => f.load(false)} notify={notify} />
       <div className="tabs"><button className={tab === 'nearby' ? 'on' : ''} onClick={() => setTab('nearby')}>Around you</button><button className={tab === 'friends' ? 'on' : ''} onClick={() => setTab('friends')}>Friend updates</button><button className={tab === 'events' ? 'on' : ''} onClick={() => setTab('events')}>Events</button>
         <select value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Place"><option value="">All localities</option>{locs.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
       <List f={f} me={me} go={go} notify={notify} empty={tab === 'friends' ? 'Nothing from friends yet.' : tab === 'events' ? 'No upcoming events.' : 'No posts yet. Be the first.'} /></div></div></div>);
@@ -85,7 +85,7 @@ function PlaceSheet({ place, me, go, notify, onClose, onChanged }) {
     {here.length > 0 && <div><h4>Friends who have been here</h4><div className="mlist">{here.map((p) => <button key={p.author_id} className="chip" onClick={() => go('profile', p.author_username)}><Avatar src={img[p.author_avatar_path]} size={26} />{p.author_display_name}</button>)}</div></div>}
     {pics.length > 0 && <div className="pstrip">{pics.map((p, i) => <button key={p.id} onClick={() => setLb(i)}><img src={img[p.image_path]} alt="" /></button>)}</div>}
     <Composer me={me} fixedPlace={place.id} onPosted={() => { load(); onChanged(); }} notify={notify} />
-    {rows ? (rows.length ? rows.map((p) => <PostCard key={p.id} p={p} me={me} img={img} go={go} onChange={change} onDelete={drop} notify={notify} />) : <p className="empty">Nobody has posted here yet.</p>) : <div className="boot">Loading…</div>}
+    {rows ? (rows.length ? rows.map((p) => <PostCard key={p.id} p={p} me={me} img={img} go={go} onChange={change} onDelete={drop} notify={notify} />) : <p className="empty">Nobody has posted here yet.</p>) : <PostSkeleton n={2} label="Loading posts here" />}
     {place.created_by === me.id && <button className="ghost sm danger" onClick={async () => { if (!(await ask({ title: 'Delete this place?', message: 'Posts stay, but lose the place tag.', confirmLabel: 'Delete', danger: true }))) return; try { await social.deletePlace(place.id); onChanged(); onClose(); notify('Place deleted'); } catch (e) { notify(e.message, 'err'); } }}>Delete place</button>}
     {lb != null && <Lightbox items={pics.map((p) => ({ id: p.id, src: img[p.image_path], caption: p.body }))} index={lb} onClose={() => setLb(null)} onIndex={setLb} />}
   </aside>);
@@ -222,7 +222,7 @@ export function MessagesView({ me, peer, go, notify, refreshUnread }) {
         const del = m.body === social.DELETED_BODY; const isEd = editing === m.id;
         const sp = del ? null : decodeSharedPost(m.body);   // a shared post: drawn as a card instead of text
         return (<Fragment key={m.id}>{newDay && <div className="dsep">{dayLabel(m.created_at)}</div>}<div className={`brow${mine ? ' mine' : ''}${first ? ' first' : ''}${tail ? ' tail' : ''}`} id={`m-${m.id}`}>{!mine && (tail ? <button type="button" className="who" aria-label="Open profile" onClick={() => go('profile', who.username)}><Avatar src={img[who.avatar_path]} size={26} /></button> : <span className="avsp" />)}{mine && <>{!del && !isEd && <MessageMenu m={m} me={me.id} notify={notify} canEdit={!sp} onEdit={() => setEditing(m.id)} onDeleted={replaceMsg} />}{!del && replyBtn(m)}</>}
-          <div className="bcol">{q && <button type="button" className="rq" onClick={() => jump(q.id)} aria-label="Go to the original message"><span className="rqlab"><ArrowBendUpLeft size={12} weight="bold" aria-hidden="true" />{replyLabel(m, q)}</span><span className="rqtxt">{previewText(q.body)}</span></button>}<div className={`bub${mine ? ' mine' : ''}${sp ? ' hasshare' : ''}${del ? ' msgdeleted' : ''}${isEd ? ' editing' : ''}`}>{isEd ? <MessageEditor m={m} notify={notify} onCancel={() => setEditing(null)} onSaved={(nm) => { replaceMsg(nm); setEditing(null); }} /> : del ? <p>This message was deleted</p> : sp ? <><SharedPostCard data={sp.data} go={go} />{sp.note && <p>{sp.note}</p>}</> : <p>{m.body}</p>}{!isEd && <small>{new Date(m.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}{m.edited_at && !del && <span className="msgedited"> · edited</span>}</small>}</div>{mine && m.id === lastMineId && m.read_at && <small className="seen">Seen {new Date(m.read_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</small>}</div>{!mine && !del && replyBtn(m)}</div></Fragment>); }) : <p className="empty">Say hi.</p>) : <div className="boot">…</div>}<div ref={end} /></div>
+          <div className="bcol">{q && <button type="button" className="rq" onClick={() => jump(q.id)} aria-label="Go to the original message"><span className="rqlab"><ArrowBendUpLeft size={12} weight="bold" aria-hidden="true" />{replyLabel(m, q)}</span><span className="rqtxt">{previewText(q.body)}</span></button>}<div className={`bub${mine ? ' mine' : ''}${sp ? ' hasshare' : ''}${del ? ' msgdeleted' : ''}${isEd ? ' editing' : ''}`}>{isEd ? <MessageEditor m={m} notify={notify} onCancel={() => setEditing(null)} onSaved={(nm) => { replaceMsg(nm); setEditing(null); }} /> : del ? <p>This message was deleted</p> : sp ? <><SharedPostCard data={sp.data} go={go} />{sp.note && <p>{sp.note}</p>}</> : <p>{m.body}</p>}{!isEd && <small>{new Date(m.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}{m.edited_at && !del && <span className="msgedited"> · edited</span>}</small>}</div>{mine && m.id === lastMineId && m.read_at && <small className="seen">Seen {new Date(m.read_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</small>}</div>{!mine && !del && replyBtn(m)}</div></Fragment>); }) : <p className="empty">Say hi.</p>) : <ChatSkeleton />}<div ref={end} /></div>
       {peerTyping && <div className="typing" role="status" aria-live="polite"><span className="tdots" aria-hidden="true"><i /><i /><i /></span>{who.display_name} is typing…</div>}
       {replyTo && <div className="replybar"><ArrowBendUpLeft className="ric" size={18} weight="bold" aria-hidden="true" /><div><b>Replying to {nameOf(replyTo)}</b><span>{previewText(replyTo.body)}</span></div><button type="button" aria-label="Cancel reply" title="Cancel reply" onClick={() => setReplyTo(null)}><X size={16} weight="bold" aria-hidden="true" /></button></div>}
       <form className="inline" onSubmit={send}><input ref={inp} value={txt} maxLength={1000} placeholder="Write a message…" onChange={(e) => { setTxt(e.target.value); if (e.target.value) typing.current?.ping(); }} onKeyDown={(e) => e.key === 'Escape' && replyTo && setReplyTo(null)} autoFocus /><button className="primary sendbtn" aria-label="Send" title="Send" disabled={!txt.trim()}><PaperPlaneRight size={20} weight="fill" aria-hidden="true" /></button></form></>)

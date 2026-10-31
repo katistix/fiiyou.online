@@ -4,14 +4,12 @@ The site is a static Vite build hosted on **Vercel**; data, auth and files live 
 
 ## 0. Before anything else
 - `public/privacy.html` and `public/terms.html` use **contact@fiiyou.online** as the contact address. Make sure that mailbox exists (or forwards to your real inbox) before launch. A legal contact address that bounces is worse than none.
-- `privacy.html` already covers GitHub (official profile only) and chat "Seen"/"typing…". Re-read it if you add anything that talks to a new service.
 - Add the region your Supabase project runs in to the "Where data is processed" paragraph of `privacy.html` if you want to be specific.
 - Have someone you trust read both pages, and update them whenever you change how data is handled.
 - Fonts (Ubuntu Sans, woff2) and their licence are already in `public/fonts/`.
 
 ## 1. Supabase (production settings)
-1. SQL Editor: migrations `0001` to `0031` and `seed.sql` must all have been run, in order, once each. Files `0015`–`0022` were renumbered in git so every file has its own version number; **their SQL is unchanged**. If you already ran them under their old names, the only files still to run are **`0023`** to **`0031`**. **Launch blocker:** `seed.sql` inserts localities without coordinates and the map skips those. Verify the names and add `lat`/`lng` to each before launch.
-   Optional: show the GitHub activity block on the official account's profile with `update public.profiles set github_repo = 'owner/name' where id = (select id from auth.users where lower(email) = lower('official-account@email'))`. This is deliberately not in the migration file, so no personal email is stored in git.
+1. SQL Editor: migrations `0001` to `0029` and `seed.sql` must all have been run, in order, once each. Files `0015`–`0022` were renumbered in git so every file has its own version number; **their SQL is unchanged**. If you already ran them under their old names, the only new file to run is **`0023_media_read_scope.sql`**. Add `lat`/`lng` to your localities (the map skips localities without coordinates; verify the names in the seed while you are there).
 2. Authentication → URL Configuration: **Site URL** = `https://fiiyou.online`. **Redirect URLs**: add `https://fiiyou.online` and `https://fiiyou.online/**` (keep `http://localhost:5173` and `http://localhost:5173/**` for local work). Password-reset and confirmation links depend on this.
 3. Authentication → Email: turn **Confirm email** on. Set up your **own SMTP provider** before inviting people: Supabase's built-in sender is for testing and is heavily limited.
 4. Authentication → Attack protection / password settings: use the strongest options your plan offers. Do **not** enable CAPTCHA yet: the sign-up form does not send a CAPTCHA token, so sign-ups would fail.
@@ -28,7 +26,6 @@ The site is a static Vite build hosted on **Vercel**; data, auth and files live 
    - `VITE_SUPABASE_ANON_KEY` = publishable / anon key (public by design; Row Level Security protects the data). **Never** add a `service_role` or secret key here or anywhere in this repository.
    - `SITE_URL` = `https://fiiyou.online` (https, no trailing slash). It builds `sitemap.xml`, `robots.txt` and the `og:image` tags. **The production build fails without it**, on purpose, so the `YOUR-DOMAIN` placeholder never goes live.
    - `VITE_VAPID_PUBLIC_KEY` = the public VAPID key (only if you set up push, see [PUSH_SETUP.md](PUSH_SETUP.md)).
-   - `VITE_ERROR_DSN` = your crash-report server's DSN (optional, see [ERROR_REPORTING.md](ERROR_REPORTING.md)). If you leave it empty, delete the "Crash reports" entry from `public/privacy.html`.
 3. Settings → Domains: add `fiiyou.online`, then create the DNS records Vercel shows at your registrar. HTTPS is automatic.
 4. **Turn GitHub Pages off** (repo Settings → Pages → unpublish), so the old site cannot answer for the domain or cause confusion. The old Pages workflow and `CNAME` files were removed from the repo.
 5. Redeploy once after setting the variables (Deployments → ⋯ → Redeploy). Security headers (`frame-ancestors`, HSTS, `nosniff`, referrer and permissions policies) come from `vercel.json`.
@@ -47,9 +44,6 @@ The site is a static Vite build hosted on **Vercel**; data, auth and files live 
 - [ ] Open `https://fiiyou.online/<some-username>` and `/post/<id>` directly (deep links) and refresh: no 404.
 - [ ] Push (if enabled): turn it on, like something from the second account while the first app is in the background, tap the notification: it opens the right post/profile, also when the app was already open.
 - [ ] Export all my data, Export my theme, Import a theme.
-- [ ] Customize: open every tab (Profile, Theme, Content, Media), change something in each, Save. The Theme, Content and Media tabs load on first open, so check them on a slow connection too.
-- [ ] Install: on an Android phone and in desktop Chrome or Edge, sign in, visit a second time: an "Install fiiyou" card appears on Home; Install works; Settings → Account has an "Install app" row until it is installed. (iPhone: Share → Add to Home Screen, unchanged.)
-- [ ] Crash reports (if configured): run the test from [ERROR_REPORTING.md](ERROR_REPORTING.md) and see it arrive; Settings → Account → Crash reports can be switched off, and then nothing arrives.
 - [ ] Delete a test account (account menu) and confirm its files disappear from Storage after a while.
 - [ ] Open the site with the browser console open: no red errors, no blocked requests.
 - [ ] `https://fiiyou.online/sitemap.xml` shows your real domain, not `YOUR-DOMAIN`.
@@ -69,5 +63,5 @@ Change code, `git push`, wait for the green CI check and the Vercel deploy. Data
 - Run `0029_search_schedule_pins_images.sql` in the SQL editor **before** deploying this version of the site. Single-photo posts keep working without it, everything new needs it.
 - **Scheduled posts** are published by the app (when it opens and every minute) and, if the `pg_cron` extension is available in your project, by a job the migration creates itself. Without pg_cron a post scheduled for 03:00 appears the next time anybody opens the app after 03:00. Enable it in Dashboard → Database → Extensions → `pg_cron`, then run the migration again.
 - **"typing…"** uses a private Realtime channel. The migration adds the two policies it needs on `realtime.messages`. If your project does not show the indicator, check Dashboard → Realtime → Settings (private channels) and that the policies `typing_receive` / `typing_send` exist. Nothing else depends on it.
-- **"Seen" in chat** is always on: the person who sent a message sees when it was read. `privacy.html` mentions this.
+- **"Seen" in chat** is always on: the person who sent a message sees when it was read. Mention this in `privacy.html`.
 - After a deploy, bump `VERSION` in `public/sw.js` only if you want to throw away every cached copy; normal deploys do not need it (pages are loaded network-first, assets have content hashes).

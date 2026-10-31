@@ -7,12 +7,10 @@ export default defineConfig(({ mode }) => {
   let sb = 'https://*.supabase.co', ws = 'wss://*.supabase.co';
   try { const u = new URL(env.VITE_SUPABASE_URL); sb = u.origin; ws = `wss://${u.host}`; } catch { /* keep wildcard */ }
   const site = (env.SITE_URL || '').replace(/\/+$/, '');
-  // Crash reports (optional): the report server's origin must be allowed in connect-src, or the browser blocks the request.
-  let errOrigin = ''; try { errOrigin = new URL(env.VITE_ERROR_DSN).origin; } catch { /* not set */ }
   // Production-only Content-Security-Policy, shipped as a <meta> tag.
-  // Scripts only from this site; no inline scripts; no plugins; network only to Supabase, OSM search, GitHub's public API (official account's profile only), your own crash-report server (only if VITE_ERROR_DSN is set), YouTube (nocookie) embeds.
+  // Scripts only from this site; no inline scripts; no plugins; network only to Supabase, OSM search, GitHub's public API (official account's profile only), YouTube (nocookie) embeds.
   const csp = ["default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob: ${sb} https://tile.openstreetmap.org https://avatars.githubusercontent.com`,
-    "media-src 'self' blob: https:", "font-src 'self'", `connect-src 'self' ${sb} ${ws} https://nominatim.openstreetmap.org https://api.github.com${errOrigin ? ` ${errOrigin}` : ''}`, 'frame-src https://www.youtube-nocookie.com',
+    "media-src 'self' blob: https:", "font-src 'self'", `connect-src 'self' ${sb} ${ws} https://nominatim.openstreetmap.org https://api.github.com`, 'frame-src https://www.youtube-nocookie.com',
     "object-src 'none'", "base-uri 'self'", "form-action 'self'"].join('; ');
   // No canonical / og:url here: index.html is served for every path (/map, /<username>, ...), so a fixed "/" would mark every page as a copy of the home page.
   const seo = site ? `<meta property="og:image" content="${site}/og-image.png"><meta name="twitter:image" content="${site}/og-image.png">` : '';
@@ -26,8 +24,6 @@ export default defineConfig(({ mode }) => {
   ];
   return {
     base,
-    // short git commit, sent with crash reports so a report can be matched to the build that produced it
-    define: { 'import.meta.env.VITE_APP_VERSION': JSON.stringify((env.VERCEL_GIT_COMMIT_SHA || env.GITHUB_SHA || 'dev').slice(0, 7)) },
     plugins: [react(), {
       name: 'fiiyou-html',
       transformIndexHtml(html, ctx) {

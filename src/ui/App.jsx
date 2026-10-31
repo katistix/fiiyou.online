@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { auth, admin as adminApi, posts, profiles, cards as cardsApi, friends, wall, social, safety, media, errorCode } from '../index.js';
-import { useImages, Boot, Avatar, Rich } from './shared.jsx';
+import { useImages, Avatar, Rich } from './shared.jsx';
+import { AppBoot, ProfileSkeleton, PageSkeleton } from './loaders.jsx';
 import { toCss } from './customCss.js';
 import { Lightbox, LikersModal, ReportModal, Verified, NavIcon, spamMessage } from './parts.jsx';
 import { HomeView, MapView, MessagesView, PostView } from './views.jsx';
@@ -187,7 +188,7 @@ function ProfileView({ username, go, notify, refreshMe, meName, autoEdit }) {
   useEffect(() => { if (autoEdit && d && d.relationship.status === 'self' && !draft) { setCollapsed(false); setDraft(makeDraft(d)); navigate(`/${meName.toLowerCase()}`, { replace: true }); } }, [d, autoEdit]);   // "Edit my profile" on Home opens the editor straight away
   useEffect(() => { let on = true; setAudioUrl(null); if (music.audio) media.signedUrl(music.audio, 'audio').then((u) => on && setAudioUrl(u)).catch(() => {}); return () => { on = false; }; }, [music.audio]);
   if (missing) return <div className="plain view"><p className="empty">This profile does not exist, or it is not available to you.</p></div>;
-  if (!d) return loadErr ? <ErrorState error={loadErr} onRetry={() => { setLoadErr(null); return load(); }} title="Could not load this profile" /> : <Boot />;
+  if (!d) return loadErr ? <ErrorState error={loadErr} onRetry={() => { setLoadErr(null); return load(); }} title="Could not load this profile" /> : <ProfileSkeleton />;
   const { profile, relationship: rel } = d; const own = rel.status === 'self';
   const startEdit = () => { setCollapsed(false); setDraft(makeDraft(d)); };
   const patch = (id, p) => setDraft((x) => ({ ...x, cards: x.cards.map((c) => (c.id === id ? { ...c, ...p } : c)) }));
@@ -337,10 +338,10 @@ export default function App() {
   useEffect(() => { if (!menu) return; const out = (e) => { if (!menuRef.current?.contains(e.target)) setMenu(false); }; const esc = (e) => { if (e.key === 'Escape') setMenu(false); };
     addEventListener('pointerdown', out); addEventListener('keydown', esc); return () => { removeEventListener('pointerdown', out); removeEventListener('keydown', esc); }; }, [menu]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3200); return () => clearTimeout(t); }, [toast]);
-  if (session === undefined) return <Boot />;
+  if (session === undefined) return <AppBoot />;
   if (recovery && session) return <NewPassword onDone={() => setRecovery(false)} />;
   if (!session) return <Auth />;
-  if (!me) return meErr ? <div className="authwrap"><ErrorState error={meErr} onRetry={loadMe} title="Could not load your account" /></div> : <Boot />;
+  if (!me) return meErr ? <div className="authwrap"><ErrorState error={meErr} onRetry={loadMe} title="Could not load your account" /></div> : <AppBoot />;
   const notify = (msg, type = 'ok') => setToast({ msg: type === 'err' ? friendlyError({ message: msg }) : msg, type });
   // first run after sign-up: the welcome steps (null = not done yet; undefined = the 0024 migration has not run, so nobody is sent through it)
   if (me.onboarded_at === null) return (<><Onboarding me={me} inviter={session.user?.user_metadata?.invited_by || getInvite()} onDone={async () => setMe(await profiles.getMyProfile())} notify={notify} />{toast && <div className={`toast ${toast.type}`} role="status">{toast.msg}</div>}</>);
@@ -371,8 +372,8 @@ export default function App() {
     {route.v === 'home' && <HomeView me={me} go={go} notify={notify} unread={unread} />}
     {route.v === 'map' && <MapView me={me} go={go} notify={notify} />}
     {route.v === 'messages' && <MessagesView key={route.peer || 'all'} me={me} peer={route.peer} go={go} notify={notify} refreshUnread={refreshUnread} />}
-    {route.v === 'admin' && isAdmin && <Suspense fallback={<Boot />}><AdminView go={go} notify={notify} /></Suspense>}
-    {route.v === 'search' && <Suspense fallback={<Boot />}><SearchView key={`${route.tag || ''}|${route.q || ''}`} me={me} go={go} notify={notify} initialQuery={route.q || ''} initialTag={route.tag || ''} /></Suspense>}
+    {route.v === 'admin' && isAdmin && <Suspense fallback={<PageSkeleton />}><AdminView go={go} notify={notify} /></Suspense>}
+    {route.v === 'search' && <Suspense fallback={<PageSkeleton />}><SearchView key={`${route.tag || ''}|${route.q || ''}`} me={me} go={go} notify={notify} initialQuery={route.q || ''} initialTag={route.tag || ''} /></Suspense>}
     {route.v === 'notifications' && <NotificationsView go={go} notify={notify} tick={nTick} onRead={setNCount} />}
     {route.v === 'settings' && <SettingsView notify={notify} go={go} />}
     {route.v === 'people' && <PeopleView me={me} go={go} notify={notify} onInvite={() => setInviteOpen(true)} />}

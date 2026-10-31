@@ -7,6 +7,7 @@ import { ask } from './dialog.jsx';
 import Comments from './Comments.jsx';
 import MentionInput from './MentionInput.jsx';
 import { loadPostDraft, savePostDraft, clearPostDraft } from '../lib/postDraft.js';
+import { Loading, RowsSkeleton } from './loaders.jsx';
 
 /** Friendly text for the database's spam-guard errors (see spam_and_bans.sql). Returns null for any other error. */
 export const spamMessage = (er) => {
@@ -37,7 +38,7 @@ export function Lightbox({ items, index, onClose, onIndex, onLike, onLikers }) {
   return (<div className="lb" onClick={onClose} role="dialog" aria-modal="true"><div className="lbin" onClick={(e) => e.stopPropagation()}>
     <button className="lbx ghost" onClick={onClose} aria-label="Close"><X size={18} weight="bold" aria-hidden="true" /></button>
     <div className="lbimg" onPointerDown={(e) => { sx.current = e.clientX; }} onPointerUp={swipeEnd} onPointerCancel={() => { sx.current = null; }}>{n > 1 && <button className="arrow l" onClick={() => onIndex((index - 1 + n) % n)} aria-label="Previous"><CaretLeft size={22} weight="bold" aria-hidden="true" /></button>}
-      {it.src ? <img src={it.src} alt={it.caption || ''} /> : <div className="boot">…</div>}
+      {it.src ? <img src={it.src} alt={it.caption || ''} /> : <Loading label="Loading photo" />}
       {n > 1 && <button className="arrow r" onClick={() => onIndex((index + 1) % n)} aria-label="Next"><CaretRight size={22} weight="bold" aria-hidden="true" /></button>}</div>
     <div className="lbfoot">{it.caption && <p>{it.caption}</p>}
       <div className="lbbar">{onLike && <button className={`like${it.liked ? ' on' : ''}`} onClick={() => onLike(it)}><Heart size={16} weight={it.liked ? 'fill' : 'bold'} aria-hidden="true" />{it.likes}</button>}{!onLike && onLikers && it.likes > 0 && <button className="like" onClick={() => onLikers(it)} aria-label={`See who liked (${it.likes})`}><Heart size={16} weight="fill" aria-hidden="true" />{it.likes}</button>}<small>{index + 1} / {n}</small></div></div>
@@ -123,7 +124,7 @@ export function LikersModal({ load, go, onClose }) {
     <div className="likehead" onTouchStart={down} onTouchMove={move} onTouchEnd={up}><i className="grab" aria-hidden="true" />
       <h3>Likes{rows && rows.length > 0 && <small>{rows.length}</small>}</h3>
       <button className="ghost likex" onClick={onClose} aria-label="Close"><X size={18} weight="bold" aria-hidden="true" /></button></div>
-    {err ? <p className="err likemsg">{err}</p> : !rows ? <div className="boot">…</div> : !rows.length ? <p className="muted likemsg">No likes yet.</p>
+    {err ? <p className="err likemsg">{err}</p> : !rows ? <RowsSkeleton n={3} label="Loading likes" className="likeload" /> : !rows.length ? <p className="muted likemsg">No likes yet.</p>
       : <ul className="likelist">{rows.map((r) => (<li key={r.id}><button className="likerow" onClick={() => { onClose(); go('profile', r.username); }}><Avatar src={img[r.avatar_path]} size={44} />
         <span><b>{r.display_name}{r.is_official && <Verified />}</b><small>@{r.username}</small></span></button></li>))}</ul>}
   </div></div>);

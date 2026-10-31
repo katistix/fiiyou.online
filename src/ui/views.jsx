@@ -8,6 +8,7 @@ import { SharedPostCard, decodeSharedPost, previewText } from './PostShare.jsx';
 import { MessageMenu, MessageEditor } from './MessageMenu.jsx';
 import { ask } from './dialog.jsx';
 import { ErrorState, friendlyError } from './errors.jsx';
+import InstallHint from './InstallHint.jsx';
 import { ArrowBendUpLeft, MagnifyingGlass, PaperPlaneRight, PushPin, X } from '@phosphor-icons/react';
 import './more.css';
 
@@ -62,7 +63,7 @@ export function HomeView({ me, go, notify, unread }) {
   useEffect(() => { discover.listLocalities().then(setLocs); social.listPlaces().then(setPlaces).catch(() => {}); }, []);
   const f = useFeed(tab === 'events' ? { kind: 'event', upcoming: true, localityId: loc ? +loc : null } : { onlyFriends: tab === 'friends', localityId: loc ? +loc : null }, notify);
   return (<div className="plain wide view"><div className="homegrid"><Snapshot go={go} unread={unread} />
-    <div className="homemain"><Composer me={me} places={places} onPosted={() => f.load(false)} notify={notify} />
+    <div className="homemain"><InstallHint /><Composer me={me} places={places} onPosted={() => f.load(false)} notify={notify} />
       <div className="tabs"><button className={tab === 'nearby' ? 'on' : ''} onClick={() => setTab('nearby')}>Around you</button><button className={tab === 'friends' ? 'on' : ''} onClick={() => setTab('friends')}>Friend updates</button><button className={tab === 'events' ? 'on' : ''} onClick={() => setTab('events')}>Events</button>
         <select value={loc} onChange={(e) => setLoc(e.target.value)} aria-label="Place"><option value="">All localities</option>{locs.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
       <List f={f} me={me} go={go} notify={notify} empty={tab === 'friends' ? 'Nothing from friends yet.' : tab === 'events' ? 'No upcoming events.' : 'No posts yet. Be the first.'} /></div></div></div>);

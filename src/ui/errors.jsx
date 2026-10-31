@@ -1,4 +1,5 @@
 import { Component, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { reportCrash } from './crash.js';
 import './errors.css';
 
 /** Turns raw errors into something a person can act on. Network failures get a plain sentence; everything else keeps its own message. */
@@ -38,13 +39,16 @@ export function ErrorState({ error, onRetry, title = 'Could not load this' }) {
 
 /** Last line of defence for a crash while rendering. "Try again" re-renders without losing the page; "Reload" starts over. */
 export class Boundary extends Component {
-  state = { e: null };
+  state = { e: null, ref: null };
   static getDerivedStateFromError(e) { return { e }; }
+  // Sends a short, scrubbed crash report if the operator turned reporting on (src/lib/errorReport.js). A reference is shown so it can be quoted in a support email.
+  componentDidCatch(error, info) { const ref = reportCrash(error, { kind: 'react', componentStack: info?.componentStack }); if (ref) this.setState({ ref }); }
   render() {
     const e = this.state.e; if (!e) return this.props.children;
     return (<div className="errstate errfull" role="alert"><h3>Something broke.</h3>
       <p>Your data is safe. Try again, and if it keeps happening, reload the page.</p>
-      <div className="erracts"><button type="button" className="primary" onClick={() => this.setState({ e: null })}>Try again</button>
+      {this.state.ref && <p className="errref">Reference: <code>{this.state.ref}</code>. Quote it if you write to us.</p>}
+      <div className="erracts"><button type="button" className="primary" onClick={() => this.setState({ e: null, ref: null })}>Try again</button>
         <button type="button" className="ghost" onClick={() => location.reload()}>Reload</button></div>
       <details><summary>Technical details</summary><pre className="errpre">{String(e.message || e)}</pre></details></div>);
   }

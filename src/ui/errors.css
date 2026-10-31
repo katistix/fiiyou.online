@@ -7,3 +7,4 @@
   font-size: .85rem; font-weight: 650; text-align: center; border: 1px solid var(--g4); box-shadow: 0 4px 18px rgba(0, 0, 0, .35); }
 .netbar.down { background: var(--red, #d92d35); color: var(--on-red, #fff); border-color: transparent; }
 .netbar.up { background: var(--green, #fff); color: var(--on-green, #000); }
+.errstate .errref { font-size: .85em; } .errstate .errref code { user-select: all; }

@@ -8,6 +8,6 @@ alter table public.profiles drop constraint if exists profiles_github_repo_forma
 alter table public.profiles add constraint profiles_github_repo_format
   check (github_repo is null or github_repo ~ '^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$');
 
-update public.profiles
-   set github_repo = 'drincdalin/fiiyou.online'
- where id = (select id from auth.users where lower(email) = 'drinksvlog@gmail.com' limit 1);
+-- Set the repository for the official account by hand, in the SQL Editor (kept out of this file so no personal email lives in git):
+--   update public.profiles set github_repo = 'owner/name'
+--    where id = (select id from auth.users where lower(email) = lower('OFFICIAL-ACCOUNT-EMAIL') limit 1);

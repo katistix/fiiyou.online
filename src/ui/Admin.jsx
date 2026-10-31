@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { admin } from '../index.js';
 import { useImages, Avatar, ago } from './shared.jsx';
+import { ask } from './dialog.jsx';
 import { Flag, UsersThree, HardDrives, ClipboardText } from '@phosphor-icons/react';
 
 const TAB_ICONS = { reports: Flag, users: UsersThree, storage: HardDrives, log: ClipboardText };
@@ -26,7 +27,7 @@ function Reports({ go, notify, refresh }) {
             {p.image_path && img[p.image_path] && <img className="athumb" src={img[p.image_path]} alt="" />}</div></div>}
         <div className="acts">
           {p && <button className="ghost sm" onClick={() => go('profile', p.author)}>Open profile</button>}
-          {p && r.target_type !== 'profile' && <button className="ghost sm danger" onClick={() => confirm('Delete this content?') && run(async () => { r.target_type === 'post' ? await admin.deletePost(r.target_id) : await admin.deleteComment(r.target_type, r.target_id); await admin.setReport(r.id, 'reviewed'); }, 'Content deleted')}>Delete content</button>}
+          {p && r.target_type !== 'profile' && <button className="ghost sm danger" onClick={async () => { if (!(await ask({ title: 'Delete this content?', message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }))) return; run(async () => { r.target_type === 'post' ? await admin.deletePost(r.target_id) : await admin.deleteComment(r.target_type, r.target_id); await admin.setReport(r.id, 'reviewed'); }, 'Content deleted'); }}>Delete content</button>}
           {p && <button className="ghost sm danger" onClick={() => delAccount(p.author_id, p.author)}>Delete account</button>}
           {p && <button className="ghost sm danger" onClick={() => banAccount(p.author_id, p.author, r.reason)}>Ban &amp; delete</button>}
           {status === 'open' && <><button className="primary sm" onClick={() => run(() => admin.setReport(r.id, 'reviewed'), 'Marked reviewed')}>Mark reviewed</button><button className="ghost sm" onClick={() => run(() => admin.setReport(r.id, 'dismissed'), 'Dismissed')}>Dismiss</button></>}
@@ -56,7 +57,7 @@ function Storage({ notify }) {
   const [found, setFound] = useState(null); const [busy, setBusy] = useState(false);
   const scan = async () => { setBusy(true); try { setFound(await admin.findOrphans()); } catch (e) { notify(e.message, 'err'); } setBusy(false); };
   const total = found ? found.media.length + found.audio.length : 0; const size = found ? [...found.media, ...found.audio].reduce((a, f) => a + f.size, 0) : 0;
-  const clean = async () => { if (!confirm(`Delete ${total} unreferenced files (${mb(size)})? This cannot be undone.`)) return; setBusy(true); try { await admin.removeOrphans(found); notify('Storage cleaned'); setFound(null); } catch (e) { notify(e.message, 'err'); } setBusy(false); };
+  const clean = async () => { if (!(await ask({ title: `Delete ${total} unreferenced files?`, message: `${mb(size)} will be freed. This cannot be undone.`, confirmLabel: 'Delete files', danger: true }))) return; setBusy(true); try { await admin.removeOrphans(found); notify('Storage cleaned'); setFound(null); } catch (e) { notify(e.message, 'err'); } setBusy(false); };
   return (<div className="panel"><h3>Storage clean-up</h3><p className="muted">Finds files that no profile, post, photo or card refers to any more (older than 2 hours). Deleting rows in SQL never frees storage, so this is the safety net.</p>
     <div className="acts"><button className="primary" disabled={busy} onClick={scan}>{busy ? 'Working…' : 'Scan for orphans'}</button>{found && total > 0 && <button className="ghost danger" disabled={busy} onClick={clean}>Delete {total} files ({mb(size)})</button>}</div>
     {found && <p className={total ? 'note' : 'okmsg'}>{total ? `${found.media.length} images and ${found.audio.length} audio files are unreferenced (${mb(size)}).` : 'Nothing to clean up.'}</p>}</div>);

@@ -3,7 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 // Vite exposes import.meta.env; fall back to process.env for node scripts.
 const env = import.meta.env ?? process.env;
 
-export const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+/** True when the build has no Supabase settings. main.jsx then shows a clear setup message instead of a blank page. */
+export const configMissing = !/^https?:\/\//.test(env.VITE_SUPABASE_URL || '') || !env.VITE_SUPABASE_ANON_KEY;
+
+// createClient throws on an empty URL, which would blank the whole page before React can render anything.
+export const supabase = createClient(configMissing ? 'http://localhost:54321' : env.VITE_SUPABASE_URL, configMissing ? 'missing' : env.VITE_SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true },
 });
 

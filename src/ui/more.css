@@ -116,9 +116,10 @@
 .navlinks .navicw .navic { width: 1.4em; height: 1.4em; flex: none; transition: transform .2s var(--ease); }
 .navlinks .navic-messages { transform: scale(1.12); }   /* the round bubble looks smaller than the house or the pin at the same size */
 .navlinks .navic-map { transform: scale(1.04); }
-.navlinks .navic-people { transform: scale(.95); }
+.navlinks .navic-people { transform: scale(1.16); }   /* three small figures in one glyph: needs to be bigger than the single-figure icons to look the same size */
 .navlinks button:hover .navic { transform: scale(1.08); }
 .navlinks button:hover .navic-messages { transform: scale(1.2); }
+.navlinks button:hover .navic-people { transform: scale(1.24); }
 .navlinks .navicw .dotb { position: absolute; top: -6px; right: -9px; margin: 0; min-width: 17px; line-height: 17px; animation: dotpop .22s var(--ease); pointer-events: none; }
 @keyframes dotpop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .navlinks .navicw .navic, .navlinks .navicw .dotb { transition: none; animation: none; } }

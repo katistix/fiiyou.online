@@ -45,10 +45,15 @@ export function Lightbox({ items, index, onClose, onIndex, onLike, onLikers }) {
   </div></div>);
 }
 
-/** Several photos of one post: swipe (touch), scroll (trackpad), drag (mouse) or use the arrow keys right inside the post. A tap opens the big viewer. */
+/** Several photos of one post: swipe (touch), scroll (trackpad), drag (mouse), the next/previous buttons (desktop) or
+ *  the arrow keys right inside the post. A tap opens the big viewer. */
 function PostImages({ srcs, onOpen }) {
   const box = useRef(null); const down = useRef(null); const dragged = useRef(false); const [i, setI] = useState(0); const n = srcs.length;
-  const to = (k) => { const el = box.current; if (el) el.scrollTo({ left: el.clientWidth * Math.max(0, Math.min(n - 1, k)), behavior: 'smooth' }); };
+  const to = (k) => {
+    const el = box.current; if (!el) return;
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;   // honour the setting instead of gliding anyway
+    el.scrollTo({ left: el.clientWidth * Math.max(0, Math.min(n - 1, k)), behavior: smooth ? 'smooth' : 'auto' });
+  };
   const onScroll = () => { const el = box.current; if (el && el.clientWidth) setI(Math.round(el.scrollLeft / el.clientWidth)); };
   const key = (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); to(i + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); to(i - 1); } };
   // a mouse cannot swipe, so a drag with the mouse turns the page; touch and trackpads scroll natively
@@ -60,6 +65,10 @@ function PostImages({ srcs, onOpen }) {
       {srcs.map((u, k) => <button key={k} type="button" className="pimg pslide" style={u ? { '--bgimg': `url("${u}")` } : undefined} onClick={() => onOpen(k)} aria-label={`Open photo ${k + 1} of ${n}`}>
         {u ? <img src={u} alt="" loading={k ? 'lazy' : undefined} draggable="false" /> : <span className="pslideph" />}</button>)}
     </div>
+    {/* desktop only (fine pointers; CSS hides them elsewhere): a mouse cannot swipe. Hidden at the ends, like Instagram.
+        Focus moves back to the strip so the arrow keys keep working once a button disappears. */}
+    {i > 0 && <button type="button" className="arrow l" onClick={() => { to(i - 1); box.current?.focus(); }} aria-label="Previous photo"><CaretLeft size={20} weight="bold" aria-hidden="true" /></button>}
+    {i < n - 1 && <button type="button" className="arrow r" onClick={() => { to(i + 1); box.current?.focus(); }} aria-label="Next photo"><CaretRight size={20} weight="bold" aria-hidden="true" /></button>}
     <span className="pcount" aria-hidden="true">{i + 1}/{n}</span>
     <div className="pdots" aria-hidden="true">{srcs.map((_, k) => <i key={k} className={k === i ? 'on' : ''} />)}</div>
   </div>);

@@ -70,9 +70,10 @@ function PostImages({ srcs, onOpen }) {
         {u ? <img src={u} alt="" loading={k ? 'lazy' : undefined} draggable="false" /> : <span className="pslideph" />}</button>)}
     </div>
     {/* desktop only (fine pointers; CSS hides them elsewhere): a mouse cannot swipe. Hidden at the ends, like Instagram.
-        Focus moves back to the strip so the arrow keys keep working once a button disappears. */}
-    {i > 0 && <button type="button" className="arrow l" onClick={() => { to(i - 1); box.current?.focus(); }} aria-label="Previous photo"><CaretLeft size={20} weight="bold" aria-hidden="true" /></button>}
-    {i < n - 1 && <button type="button" className="arrow r" onClick={() => { to(i + 1); box.current?.focus(); }} aria-label="Next photo"><CaretRight size={20} weight="bold" aria-hidden="true" /></button>}
+        Focus moves back to the strip so the arrow keys keep working once a button disappears; preventScroll is required,
+        because a plain focus() makes the browser scroll the strip into view and cancels the smooth scroll above. */}
+    {i > 0 && <button type="button" className="arrow l" onClick={() => { to(i - 1); box.current?.focus({ preventScroll: true }); }} aria-label="Previous photo"><CaretLeft size={20} weight="bold" aria-hidden="true" /></button>}
+    {i < n - 1 && <button type="button" className="arrow r" onClick={() => { to(i + 1); box.current?.focus({ preventScroll: true }); }} aria-label="Next photo"><CaretRight size={20} weight="bold" aria-hidden="true" /></button>}
     <span className="pcount" aria-hidden="true">{i + 1}/{n}</span>
     <div className="pdots" aria-hidden="true">{srcs.map((_, k) => <i key={k} className={k === i ? 'on' : ''} />)}</div>
   </div>);

@@ -35,6 +35,12 @@
 .pdots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
 .pdots i { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 40%, transparent); }
 .pdots i.on { background: var(--ink); }
+/* next / previous for mice (a mouse cannot swipe): shown when the pointer is over the photos or focus is inside them,
+   and never on touch-only screens where the swipe is the natural gesture */
+.pimgs .arrow { z-index: 3; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.pimgs:hover .arrow, .pimgs:focus-within .arrow { opacity: 1; pointer-events: auto; }
+@media (pointer: coarse) { .pimgs .arrow { display: none; } }
+@media (prefers-reduced-motion: reduce) { .pimgs .arrow { transition: none; } }
 .lbimg { touch-action: pan-y; }
 
 /* notifications page (the list used to live inside the account menu) */

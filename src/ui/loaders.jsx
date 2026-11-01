@@ -2,12 +2,8 @@
  * so one slow or failed request never makes the whole page look broken.
  * Colours come from the theme tokens (--g1..--g4, --accent-fg), so it follows each person's theme. */
 
-/** 3x3 squares that ripple diagonally. Pure CSS animation. */
-export const Squares = ({ size = 28 }) => (
-  <span className="ld-sq" style={{ '--sz': `${size}px` }} aria-hidden="true">
-    {Array.from({ length: 9 }, (_, i) => <i key={i} style={{ '--d': `${((i % 3) + Math.floor(i / 3)) * 0.11}s` }} />)}
-  </span>
-);
+/** The classic loading circle: a ring with one bright arc, spinning. Pure CSS, follows the theme accent. */
+export const Spinner = ({ size = 28 }) => <span className="ld-spin" style={{ '--sz': `${size}px` }} aria-hidden="true" />;
 
 /** A shimmering placeholder block. */
 export const Bone = ({ w = '100%', h = 12, r = 8, className = '' }) => (
@@ -20,7 +16,7 @@ export function Tile({ as: As = 'div', label = 'Loading', spin = false, classNam
     <As className={`ld ld-tile ${className}`} {...(label ? { role: 'status', 'aria-live': 'polite', 'aria-busy': 'true' } : { 'aria-hidden': 'true' })}>
       {label && <span className="ld-sr">{label}…</span>}
       <div className="ld-inner">
-        {spin && <span className="ld-corner"><Squares size={22} /></span>}
+        {spin && <span className="ld-corner"><Spinner size={22} /></span>}
         <div className="ld-body" aria-hidden="true">{children}</div>
       </div>
     </As>
@@ -29,7 +25,7 @@ export function Tile({ as: As = 'div', label = 'Loading', spin = false, classNam
 
 /** Small inline loader for places with no room for a tile (buttons, lightbox, one line). */
 export const Loading = ({ label = 'Loading', size = 18, className = '' }) => (
-  <span className={`ld ld-inline ${className}`} role="status" aria-live="polite"><Squares size={size} /><span>{label}…</span></span>
+  <span className={`ld ld-inline ${className}`} role="status" aria-live="polite"><Spinner size={size} /><span>{label}…</span></span>
 );
 
 const Lines = ({ n = 3, last = '60%' }) => <>{Array.from({ length: n }, (_, i) => <Bone key={i} h={12} w={i === n - 1 ? last : '100%'} />)}</>;

@@ -1,5 +1,7 @@
 # fiiyou
 
+**The internet belongs to you.**
+
 A customizable local social network: profiles you can style (colors, fonts, stickers, safe custom styles, music), photos with captions and likes, a friends map with real places, home feed with events, chat, and strong privacy defaults. React + Vite on the front, Supabase (Postgres, Auth, Storage, Realtime) behind it, hosted as static files on Vercel.
 
 - **Release guide:** [docs/RELEASE.md](docs/RELEASE.md) · **Push notifications:** [docs/PUSH_SETUP.md](docs/PUSH_SETUP.md)

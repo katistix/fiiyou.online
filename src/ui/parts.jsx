@@ -28,6 +28,9 @@ export function Verified() {
 /** Pop-up viewer. items: [{id, src, caption, likes, liked}]. Pass onLike to show the like button. */
 export function Lightbox({ items, index, onClose, onIndex, onLike, onLikers }) {
   const it = items[index]; const n = items.length; const sx = useRef(null);
+  // the photo box keeps its size while the picture loads (no collapsing strip), and says so if it never arrives
+  const [ready, setReady] = useState(false); const [bad, setBad] = useState(false);
+  useEffect(() => { setReady(false); setBad(false); }, [it?.src]);
   const swipeEnd = (e) => { if (sx.current == null || n < 2) return; const dx = e.clientX - sx.current; sx.current = null; if (Math.abs(dx) > 50) onIndex(dx < 0 ? (index + 1) % n : (index - 1 + n) % n); };
   useEffect(() => {
     const key = (e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowRight') onIndex((index + 1) % n); if (e.key === 'ArrowLeft') onIndex((index - 1 + n) % n); };
@@ -37,8 +40,9 @@ export function Lightbox({ items, index, onClose, onIndex, onLike, onLikers }) {
   if (!it) return null;
   return (<div className="lb" onClick={onClose} role="dialog" aria-modal="true"><div className="lbin" onClick={(e) => e.stopPropagation()}>
     <button className="lbx ghost" onClick={onClose} aria-label="Close"><X size={18} weight="bold" aria-hidden="true" /></button>
-    <div className="lbimg" onPointerDown={(e) => { sx.current = e.clientX; }} onPointerUp={swipeEnd} onPointerCancel={() => { sx.current = null; }}>{n > 1 && <button className="arrow l" onClick={() => onIndex((index - 1 + n) % n)} aria-label="Previous"><CaretLeft size={22} weight="bold" aria-hidden="true" /></button>}
-      {it.src ? <img src={it.src} alt={it.caption || ''} /> : <Loading label="Loading photo" />}
+    <div className={`lbimg${ready ? '' : bad ? ' bad' : ' wait'}`} onPointerDown={(e) => { sx.current = e.clientX; }} onPointerUp={swipeEnd} onPointerCancel={() => { sx.current = null; }}>{n > 1 && <button className="arrow l" onClick={() => onIndex((index - 1 + n) % n)} aria-label="Previous"><CaretLeft size={22} weight="bold" aria-hidden="true" /></button>}
+      {it.src && !bad && <img key={it.src} className={ready ? '' : 'pending'} src={it.src} alt={it.caption || ''} ref={(el) => { if (el && el.complete && el.naturalWidth) setReady(true); }} onLoad={() => setReady(true)} onError={() => setBad(true)} />}
+      {bad ? <p className="lbmsg" role="alert">Couldn&apos;t load this photo.</p> : !ready && <div className="lbwait"><Loading label="Loading photo" size={30} /></div>}
       {n > 1 && <button className="arrow r" onClick={() => onIndex((index + 1) % n)} aria-label="Next"><CaretRight size={22} weight="bold" aria-hidden="true" /></button>}</div>
     <div className="lbfoot">{it.caption && <p>{it.caption}</p>}
       <div className="lbbar">{onLike && <button className={`like${it.liked ? ' on' : ''}`} onClick={() => onLike(it)}><Heart size={16} weight={it.liked ? 'fill' : 'bold'} aria-hidden="true" />{it.likes}</button>}{!onLike && onLikers && it.likes > 0 && <button className="like" onClick={() => onLikers(it)} aria-label={`See who liked (${it.likes})`}><Heart size={16} weight="fill" aria-hidden="true" />{it.likes}</button>}<small>{index + 1} / {n}</small></div></div>

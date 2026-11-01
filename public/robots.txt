@@ -1,4 +1,4 @@
-# fiiyou: everything except the landing page is behind a login, so there is nothing else to index.
+# fiiyou app: everything except the sign-in page, privacy and terms is behind a login, so there is nothing else to index. The public landing page lives on fiiyou.online.
 User-agent: *
 Allow: /
-Sitemap: https://YOUR-DOMAIN/sitemap.xml
+Sitemap: https://app.fiiyou.online/sitemap.xml

@@ -23,7 +23,7 @@ People can turn reports off in **Settings → Account → Crash reports** (shown
 4. **On the server, protect your users:**
    - **required, because the privacy page promises it:** turn on **"Prevent storing of IP addresses"** (Sentry: Project Settings → Security & Privacy; in GlitchTip check its privacy settings). The browser sends no user id, but the server sees the connection's IP unless you turn this off;
    - set **data retention to 30 days or less**;
-   - set the project's **allowed domains / CORS** to `https://fiiyou.online`;
+   - set the project's **allowed domains / CORS** to `https://app.fiiyou.online`;
    - rate-limit the project key (anyone can read the DSN from the site, so someone could flood it).
 5. Keep `public/privacy.html` in step: it already has a "Crash reports" entry. **If you do not configure a server, delete that entry** so the policy stays true.
 
